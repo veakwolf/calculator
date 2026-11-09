@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Kalkulačka Rekonštitúcie</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f8f7f5;
+    --surface: #ffffff;
+    --fg: #1a1a1a;
+    --fg-muted: #6b6b6b;
+    --border: #e2e0dc;
+    --accent: #2563eb;
+    --accent-soft: #eff4ff;
+    --accent-fg: #ffffff;
+    --highlight: #0d9488;
+    --highlight-soft: #f0fdfa;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111113;
+      --surface: #1c1c1f;
+      --fg: #e8e8e8;
+      --fg-muted: #8a8a8a;
+      --border: #2e2e32;
+      --accent: #6090f0;
+      --accent-soft: #1a2540;
+      --accent-fg: #ffffff;
+      --highlight: #2dd4bf;
+      --highlight-soft: #0f2625;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111113;
+    --surface: #1c1c1f;
+    --fg: #e8e8e8;
+    --fg-muted: #8a8a8a;
+    --border: #2e2e32;
+    --accent: #6090f0;
+    --accent-soft: #1a2540;
+    --accent-fg: #ffffff;
+    --highlight: #2dd4bf;
+    --highlight-soft: #0f2625;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    padding: 0 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 32px 0;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .subtitle {
+    color: var(--fg-muted);
+    font-size: 0.875rem;
+    margin: 4px 0 0;
+    line-height: 1.5;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+    margin: 0 0 16px;
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 480px) {
+    .fields { grid-template-columns: 1fr; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  label .unit {
+    color: var(--fg-muted);
+    font-weight: 400;
+  }
+
+  .tip {
+    font-size: 0.6875rem;
+    color: var(--fg-muted);
+    line-height: 1.4;
+  }
+
+  input[type="number"], select {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--fg);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input[type="number"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+
+  .result-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 16px;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .result-hero .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .result-hero .value {
+    font-family: var(--font-mono);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-hero .unit-label {
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+    font-weight: 500;
+  }
+
+  .conc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--highlight-soft);
+    border-radius: 10px;
+    margin-top: 12px;
+    gap: 12px;
+  }
+  .conc-row .conc-label {
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    font-weight: 500;
+  }
+  .conc-row .conc-val {
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--highlight);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .ref-table th {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--fg-muted);
+    text-align: left;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-table th:last-child { text-align: right; }
+  .ref-table td {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table .active-row td {
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Kalkulačka Rekonštitúcie</h1>
+    <p class="subtitle">Rozpustenie suchého prášku v rozpúšťadle a výpočet presného objemu na natiahnutie pre cieľovú dávku.</p>
+  </header>
+
+  <div class="card">
+    <p class="card-title">Vstupy</p>
+    <div class="fields">
+      <div class="field">
+        <label>Hmotnosť prášku <span class="unit">(mg)</span></label>
+        <input type="number" id="powder" value="10" min="0.01" step="any">
+        <span class="tip">Celková suchá hmotnosť v nádobe</span>
+      </div>
+      <div class="field">
+        <label>Objem rozpúšťadla <span class="unit">(mL)</span></label>
+        <input type="number" id="solvent" value="2" min="0.01" step="any">
+        <span class="tip">Množstvo kvapaliny pridanej na rozpustenie</span>
+      </div>
+      <div class="field">
+        <label>Cieľová dávka <span class="unit">(mg)</span></label>
+        <input type="number" id="dose" value="2" min="0.01" step="any">
+        <span class="tip">Požadované množstvo na jedno podanie</span>
+      </div>
+      <div class="field">
+        <label>Stupnica merania</label>
+        <select id="scale">
+          <option value="100">U-100 striekačka (100 jednotiek/mL)</option>
+          <option value="40">U-40 striekačka (40 jednotiek/mL)</option>
+          <option value="ml">Mililitre (mL)</option>
+        </select>
+        <span class="tip">Podľa akej stupnice je vaša striekačka graduovaná</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">Výsledok</p>
+    <div class="result-hero">
+      <span class="label">Množstvo na natiahnutie</span>
+      <span class="value" id="drawValue">—</span>
+      <span class="unit-label" id="drawUnit"></span>
+    </div>
+    <div class="conc-row">
+      <span class="conc-label">Koncentrácia roztoku</span>
+      <span class="conc-val" id="concValue">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">Referenčná tabuľka</p>
+    <table class="ref-table">
+      <thead><tr><th>Cieľová dávka</th><th>Natiahnutie</th></tr></thead>
+      <tbody id="refBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const els = { powder: $('powder'), solvent: $('solvent'), dose: $('dose'), scale: $('scale') };
+
+  function fmt(n) {
+    if (n >= 100) return n.toFixed(1);
+    if (n >= 1) return n.toFixed(2);
+    return n.toFixed(3);
+  }
+
+  function scaleLabel(s) {
+    return s === 'ml' ? 'mL' : 'jedn.';
+  }
+
+  function convert(pullMl, s) {
+    return s === 'ml' ? pullMl : pullMl * Number(s);
+  }
+
+  function calc() {
+    const pw = parseFloat(els.powder.value);
+    const sv = parseFloat(els.solvent.value);
+    const td = parseFloat(els.dose.value);
+    const sc = els.scale.value;
+
+    if (!(pw > 0 && sv > 0 && td > 0)) {
+      $('drawValue').textContent = '—';
+      $('drawUnit').textContent = '';
+      $('concValue').textContent = '—';
+      $('refBody').innerHTML = '';
+      return;
+    }
+
+    const conc = pw / sv;
+    const pullMl = td / conc;
+    const drawAmt = convert(pullMl, sc);
+    const unit = scaleLabel(sc);
+
+    $('drawValue').textContent = fmt(drawAmt);
+    $('drawUnit').textContent = unit;
+    $('concValue').textContent = fmt(conc) + ' mg/mL';
+
+    const maxDose = pw;
+    const steps = [];
+    let inc = pw <= 5 ? 0.5 : pw <= 20 ? 1 : pw <= 100 ? 5 : 10;
+    for (let d = inc; d <= maxDose + 0.001; d += inc) {
+      steps.push(d);
+      if (steps.length >= 10) break;
+    }
+
+    let rows = '';
+    for (const d of steps) {
+      const pull = d / conc;
+      const val = convert(pull, sc);
+      const active = Math.abs(d - td) < 0.001;
+      rows += `<tr class="${active ? 'active-row' : ''}"><td>${fmt(d)} mg</td><td>${fmt(val)} ${unit}</td></tr>`;
+    }
+    $('refBody').innerHTML = rows;
+  }
+
+  for (const el of Object.values(els)) el.addEventListener('input', calc);
+  calc();
+</script>
+</body>
+</html>
